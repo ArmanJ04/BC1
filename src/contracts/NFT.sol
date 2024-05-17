@@ -36,7 +36,7 @@ contract MERC721 is IERC721, IERC721Metadata, ERC165{
     string _symbol;
     string baseUri;
     address owner;
-    uint256 public constant REQUIRED_FRIENDS = 5;
+    uint256 public constant REQUIRED_FRIENDS = 2;
     //Мэппинги для хранения информации о балансах, адресов токенов
     mapping(uint256 => address) owners;
     mapping(address => uint256) balances;

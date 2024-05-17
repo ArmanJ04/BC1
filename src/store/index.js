@@ -3,14 +3,12 @@ import { ABI } from "@/contracts/Web3Linkedin.abi.js"
 import { bytecode } from "@/contracts/Web3Linkedin.bin.js"
 import { NFTABI } from '@/contracts/MERC721.abi';
 import { NFTbytecode } from '@/contracts/MERC721.bin';
-const FormData = require('form-data');
 
 const axios = require("axios");
-const formData = new FormData();
 
-const PinataJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIxYzUxOTRhNS1mYjVjLTQ3NDktYTk3ZS1hZGI5MGQ5MGZmYzkiLCJlbWFpbCI6Im11YWZpa2RAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siaWQiOiJGUkExIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9LHsiaWQiOiJOWUMxIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjlmOWRkZGFjNzAwYmRkMTIwZTNhIiwic2NvcGVkS2V5U2VjcmV0IjoiMTdjODYyYjY5YjIxZTFhYWY2N2FjYzcxNDE1Yzc4MzhhYWViOWJlODQyMDliMDkwNDRmNmQwMjU0ZWY3MDBlOCIsImlhdCI6MTcwODgxMTcyNH0.VXxgf2ScirkXWh79XGAAt1nyTsAuBvkqKnR6KwpHrYI";
+const PinataJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIxYzUxOTRhNS1mYjVjLTQ3NDktYTk3ZS1hZGI5MGQ5MGZmYzkiLCJlbWFpbCI6Im11YWZpa2RAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siaWQiOiJGUkExIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9LHsiaWQiOiJOWUMxIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6ImZlYmNjY2NiNGMyOGNlZjQ4YzFiIiwic2NvcGVkS2V5U2VjcmV0IjoiNTIzMmRiNjE5ZjUyZjFiZDE0ZTk1OTg4MjQ4NDA0M2NlZTM4NzZiNmI5OGU3ODhlODEzOGJkOTQzNjRhMGYzNSIsImlhdCI6MTcxNTc2NzU0MX0.-npB0nQDZKCQbIZo1irPX6IlY6-M26mT1DR7h86xRDM";
 const ethers = require('ethers')
-let provider = new ethers.providers.JsonRpcProvider("https://polygon-mumbai.g.alchemy.com/v2/wusrTgSFSsScFKTK6Nqa5rFoisfYXjPW")
+let provider = new ethers.providers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/UqJsOz1IQnRrGqV9bh7Q7ziNR2rN7Pi7")
 
 export default createStore({
     state: {
@@ -18,7 +16,7 @@ export default createStore({
         chainId: "",
         chain: "",
         deployHash: "",
-        contractAddress: "0x99E1De5314d700b79e339062B6c66c87015Eb52F",
+        contractAddress: "0x8c5ce0D763e0cC799Afdb92477dDe77520Ba7E00",
         isConnected: false,
         username: "",
         userBio: "",
@@ -139,40 +137,58 @@ export default createStore({
                 }
             })
         },
+        // async changeNetwork({state}, chainId) {
+        //     console.log(chainId)
+        //     if (typeof window.ethereum !== 'undefined') {
+        //         try {
+        //             await window.ethereum.request({
+        //                 method: 'wallet_switchEthereumChain',
+        //                 params: [{ chainId: `0x${chainId[0].toString(16)}` }],
+        //             });
+        //         } catch (error) {
+        //             console.error('Error switching network:', error);
+        //         }
+        //     } else {
+        //         console.error('MetaMask not detected. Please install MetaMask extension.');
+        //     }
+        // },
         async uploadFileToPinata({ state }, args) {
             try {
-                const [file] = args
-                console.log(file)
+                const [file] = args;
+                console.log('File:', file);
 
+                const formData = new FormData();
                 formData.append('file', file);
-                console.log(formData)
+                console.log('FormData after file append:', formData);
 
-                const pinataMetadata = {
+                const pinataMetadata = JSON.stringify({
                     name: "File name",
-                };
-                formData.append("pinataMetadata", JSON.stringify(pinataMetadata));
-                console.log(formData)
+                });
+                formData.append("pinataMetadata", pinataMetadata);
+                console.log('FormData after pinataMetadata append:', formData);
 
+                const pinataOptions = JSON.stringify({
+                    cidVersion: 0,
+                });
+                formData.append("pinataOptions", pinataOptions);
+                console.log('FormData after pinataOptions append:', formData);
 
-                const pinataOptions = {
-                    cidVersion: 1,
-                };
-
-                formData.append("pinataOptions", JSON.stringify(pinataOptions));
-                console.log(formData)
-
+                // Logging FormData contents
+                formData.forEach((value, key) => {
+                    console.log(`${key}: ${value}`);
+                });
 
                 const res = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
                     headers: {
-                        'Content-Type': `multipart/form-data`,
-                        'pinata_api_key': "9f9dddac700bdd120e3a",
-                        'pinata_secret_api_key': "17c862b69b21e1aaf67acc71415c7838aaeb9be84209b09044f6d0254ef700e8",
+                        'Content-Type': 'multipart/form-data',
+                        'pinata_api_key': "febccccb4c28cef48c1b",
+                        'pinata_secret_api_key': "5232db619f52f1bd14e959882484043cee3876b6b98e788e8138bd94364a0f35",
                     },
                 });
 
-                console.log(res)
-                state.ipfsHash = res.data.IpfsHash
-                return res.data.IpfsHash
+                console.log('Response:', res);
+                state.ipfsHash = res.data.IpfsHash;
+                return res.data.IpfsHash;
             } catch (error) {
                 console.error("Error uploading file to Pinata:", error);
                 throw error;
@@ -204,49 +220,53 @@ export default createStore({
 
             console.log("Registered succesfully!")
         },
-        async updateProfileName({ state }, args) {
-            const [newName] = args
-            const iContract = new ethers.utils.Interface(ABI)
-            const data = iContract.encodeFunctionData("updateProfileName", [newName])
-
-            const txHash = await window.ethereum.request({
-                method: "eth_sendTransaction",
-                params: [{
-                    from: state.address,
-                    to: state.contractAddress,
-                    data: data
-                }]
-            })
-            console.log(`Tx hash: ${txHash}`)
-
-            console.log("Name changed succesfully!")
-
-        },
-        async updateProfileBio({ state }, args) {
-            const [newBio] = args
-            const iContract = new ethers.utils.Interface(ABI)
-            const data = iContract.encodeFunctionData("updateProfileBio", [newBio])
-
-            const txHash = await window.ethereum.request({
-                method: "eth_sendTransaction",
-                params: [{
-                    from: state.address,
-                    to: state.contractAddress,
-                    data: data
-                }]
-            })
-            console.log(`Tx hash: ${txHash}`)
-
-            console.log("BIO changed succesfully!")
-
-        },
-        async updateProfilePicture({ dispatch, state }, args) {
-            const [ipfsHash] = args
+        async updateProfile({ state }, args) {
+            const [name, bio, ipfsHash] = args
 
             try {
+                const iContract = new ethers.utils.Interface(ABI)
+                const data = iContract.encodeFunctionData("updateProfile", [name, bio, ipfsHash])
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: state.address,
+                        to: state.contractAddress,
+                        data: data,
+                    }],
+                });
 
-                const iContract = new ethers.utils.Interface(ABI);
-                const data = iContract.encodeFunctionData('updateProfilePicture', [ipfsHash]);
+                console.log(`Tx hash: ${txHash}`);
+                console.log('Profile changed successfully!');
+            } catch (error) {
+                console.error('Error updating profile:', error);
+            }
+        },
+        async setNft({state}, args){
+            const[address, value] = args
+
+            try {
+                const iContract = new ethers.utils.Interface(ABI)
+                const data = iContract.encodeFunctionData("setNft", [address, value])
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: "0x4F9ae982818340D29E34994bAedf128C07e42E2f",
+                        to: state.contractAddress,
+                        data: data,
+                    }],
+                });
+
+                console.log(`Tx hash: ${txHash}`);
+                console.log('hasMintedNft set successfully!');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        },
+        async createPost({state}, args){
+            const [content] = args
+            try{
+                const iContract = new ethers.utils.Interface(ABI)
+                const data = iContract.encodeFunctionData("createPost", [content])
 
                 const txHash = await window.ethereum.request({
                     method: 'eth_sendTransaction',
@@ -258,29 +278,32 @@ export default createStore({
                 });
 
                 console.log(`Tx hash: ${txHash}`);
-                console.log('Picture changed successfully!');
-            } catch (error) {
-                console.error('Error updating profile picture:', error);
+                console.log('Post created successfully!');
+            } catch(error){
+                console.log("Error:", error)
             }
+        },
+        async getUserPosts({state}, args){
+            const[address] = args
+            const posts = await state.contest.getUserPosts(address)
+
+            return posts
         },
         async getUserProfile({ state, dispatch }, address) {
             console.log(address)
             console.log("Store")
-            const [username, userBio, userProfilePicture, userFriends] = await state.contest.getUserProfile(address[0])
+            const [username, userBio, userProfilePicture, userFriends, hasMintedNft] = await state.contest.getUserProfile(address[0])
             console.log(userProfilePicture)
             let url = await dispatch("getImageFromPinata", userProfilePicture)
-            if (url === "https://rose-decisive-louse-962.mypinata.cloud/ipfs/") {
-                url = "'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/1200px-Default_pfp.svg.png'"
-            }
-            else {
-                url = await dispatch("getImageFromPinata", userProfilePicture)
-            }
+            
+            // url = "'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/1200px-Default_pfp.svg.png'"
             const user = {
                 address: address[0],
                 name: username,
                 bio: userBio,
                 image: url,
-                friends: userFriends
+                friends: userFriends,
+                hasMintedNft: hasMintedNft
             }
             return (user)
         },
@@ -364,14 +387,14 @@ export default createStore({
         async getTOPWEB3({ state }, args) {
             const [address, friends] = args
 
-            const privateKey = "fd487565fd2e65acc3467ae53c1aa6920763a602f3b44fb944b95f7286f57cd2"
+            const privateKey = "4cf4e7ac3a513df3d3d128f465440d83248874bea3c9c75391cd4c0e6c939350"
             const wallet = new ethers.Wallet(privateKey, provider);
-            const contract = new ethers.Contract("0xDbB0e637bcEaE22EC53890BBAF213a3a46Cb8c80", NFTABI, wallet);
+            const contract = new ethers.Contract("0x8dE238A81042E99FFCb25666f281429D1EAf59F6", NFTABI, wallet);
 
             const data = contract.interface.encodeFunctionData("mint", [address, friends])
 
             const tx = await wallet.sendTransaction({
-                to: "0xDbB0e637bcEaE22EC53890BBAF213a3a46Cb8c80",
+                to: "0x8dE238A81042E99FFCb25666f281429D1EAf59F6",
                 data: data,
             });
 
@@ -382,7 +405,7 @@ export default createStore({
         },
         async getBalanceNFT({ state }, args) {
             console.log(args)
-            const contract = new ethers.Contract("0xDbB0e637bcEaE22EC53890BBAF213a3a46Cb8c80", NFTABI, provider);
+            const contract = new ethers.Contract("0x8dE238A81042E99FFCb25666f281429D1EAf59F6", NFTABI, provider);
             console.log(contract)
             const balance = await contract.balanceOf(args[0])
             console.log(balance)

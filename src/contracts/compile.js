@@ -32,8 +32,8 @@ function myCompiler(solc, fileName, contractName, contractCode){
     fs.writeFileSync(__dirname + '\\' + contractName + '.bin', bytecode)
 }
 
-let fName = "NFT.sol"
-let cName = "MERC721"
+let fName = "LinkedIn.sol"
+let cName = "Web3Linkedin"
 let cCode = fs.readFileSync(__dirname + '\\' + fName, 'utf-8')
 
 

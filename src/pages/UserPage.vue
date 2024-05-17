@@ -1,5 +1,5 @@
 <template>
-    <div> <h1>User Information</h1> </div>
+    <div></div>
     <user-item
         :userAddress = "$route.params.searchAddress"
     />
@@ -9,5 +9,5 @@
 export default{}
 </script>
 
-<style>
+<style scoped>
 </style>

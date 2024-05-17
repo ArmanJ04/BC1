@@ -1,54 +1,62 @@
 <template>
-    <div class="container">
-        <div class="main-body">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img :src="userImageSrc" alt="Pinata Image" class="rounded-circle" width="150" />
-                        <div class="mt-3">
-                            <h4>Address: {{ $store.state.address }}</h4>
-                            <h4>Username: {{ this.user.name }}</h4>
-
-                            <div v-if="hasNFT">
-                                <a href="https://mumbai.polygonscan.com/address/0xDbB0e637bcEaE22EC53890BBAF213a3a46Cb8c80">
-                                    <img class="rounded-circle" src="../image/nft.jpg" alt="">
-                                </a>
-                                <p>Congratulations! You have an NFT.</p>
-                            </div>
-                            <div v-else>
-                                <p>You don't have an NFT yet. Mint one by getting 5 friends!</p>
-                                <div v-if="friends.length >= 5">
-                                    <button @click="getNFT" class="btn">Get NFT</button>
+    <div class="body">
+        <div class="container">
+            <div class="main-body">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="user-profile">
+                            <div class="profile-header">
+                                <div class="profile-image">
+                                    <img :src="userImageSrc" alt="No Image" class="avatar" />
+                                </div>
+                                <div class="profile-info">
+                                    <h4 class="nickname">{{ user.name }}</h4>
+                                    <div v-if="hasNFT">
+                                        <h5 class="nft-label">TOPWEB3 NFT</h5>
+                                        <a href="https://sepolia.etherscan.io/address/0x8dE238A81042E99FFCb25666f281429D1EAf59F6">
+                                            <img class="nft-image" src="../image/nft.jpg" alt="NFT Image">
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                            <button @click="refresh" class="btn">Refresh</button>
-                            <button @click="toggleNameForm" class="btn">Change Name</button>
-
-                            <div v-if="showNameForm" class="form-container">
-                                <input v-model="name" type="text" placeholder="Name" name="first_name" required />
-                                <button @click="updateName" class="btn">Update Name</button>
+                            <div class="profile-actions">
+                                <button @click="refresh" class="btn">Обновить входящие данные</button>
+                                <button @click="goToEditPage" class="btn">Редактировать профиль</button>
                             </div>
-                        </div>
-                        <div class="mt-3">
-                            <h4>User BIO: {{ this.user.bio || 'No BIO yet' }}</h4>
-                            <button @click="toggleBioForm" class="btn">Change Bio</button>
-                            <button @click="toggleImageForm" class="btn">Change Image</button>
-
-                            <div v-if="showBioForm" class="form-container">
-                                <textarea v-model="bio" placeholder="Bio" name="bio" rows="4"></textarea>
-                                <button @click="updateBio" class="btn">Update BIO</button>
+                            <div class="user-bio">
+                                <h4>Описание: {{ user.bio || 'Нет описания' }}</h4>
                             </div>
-
-                            <div v-if="showImageForm" class="form-container">
-                                <div class="input-field">
-                                    <i class="fas fa-file"></i>
-                                    <input type="file" @change="handleFileChange" accept=".jpg, .jpeg, .png" required />
+                            <div class="profile-details">
+                                <h5>Адрес: {{ $store.state.address }}</h5>
+                                <div>
+                                    <div v-if="friends.length >= 2 && !hasNFT" >
+                                        <button @click="getNFT" class="btn">Get NFT</button>
+                                    </div>
                                 </div>
-                                <button @click="updatePicture" class="btn-blue">Add Picture</button>
+                            </div>
+                            <div class="create-post" v-if="friends.length >= 2">
+                                <h4>Написать пост</h4>
+                                <textarea v-model="postContent" class="form-control" rows="3" placeholder="Что у вас нового?"></textarea>
+                                <button @click="createPost" class="btn">Отправить</button>
+                            </div>
+                            <div class="user-posts" v-if="friends.length >= 2">
+                                <h4>Ваши посты</h4>
+                                <div v-if="posts.length === 0">
+                                    <p>Нет постов для отображения</p>
+                                </div>
+                                <div v-else>
+                                    <div v-for="post in posts" :key="post.id" class="post-item">
+                                        <h1>{{ post.id }}</h1>
+                                        <p>{{ post.content }}</p>
+                                        <!-- <small>{{ post.timestamp | formatDate }}</small> -->
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="mt-3">
-                            <h1>Friends</h1>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="user-friends">
+                            <h1>Друзья</h1>
                             <div v-for="address in friends" :key="address">
                                 <friend-item :userAddress="address" />
                             </div>
@@ -59,6 +67,8 @@
         </div>
     </div>
 </template>
+
+
 <script>
 import { mapActions } from 'vuex'
 export default {
@@ -73,7 +83,9 @@ export default {
             showNameForm: false,
             showBioForm: false,
             showImageForm: false,
-            hasNFT: false
+            hasNFT: false,
+            postContent: "",
+            posts: []
         };
     },
     computed: {
@@ -91,53 +103,47 @@ export default {
             uploadFileToPinata: "uploadFileToPinata",
             getImageFromPinata: "getImageFromPinata",
             getTOPWEB3: "getTOPWEB3",
-            getBalanceNFT: "getBalanceNFT"
+            getBalanceNFT: "getBalanceNFT",
+            setNftAction: "setNft",
+            createPostAction: "createPost",
+            getUserPostsAction: "getUserPosts"
         }),
-        handleFileChange(event) {
-            this.selectedFile = event.target.files[0];
-        },
-        async updateName() {
-            await this.updateProfileName([this.name])
-        },
-        async updateBio() {
-            await this.updateProfileBio([this.bio])
-        },
-        async updatePicture() {
-            console.log(this.selectedFile)
-            const ipfsHash = await this.uploadFileToPinata([this.selectedFile])
-            await this.updateProfilePicture([ipfsHash])
-        },
         async getUser() {
             console.log(this.$store.state.address)
             this.user = await this.getUserProfile([this.$store.state.address])
             this.friends = this.user.friends
+            this.hasNFT = this.user.hasMintedNft
             console.log(this.friends)
-        },
-        toggleNameForm() {
-            this.showNameForm = !this.showNameForm;
-        },
-        toggleBioForm() {
-            this.showBioForm = !this.showBioForm;
-        },
-        toggleImageForm() {
-            this.showImageForm = !this.showImageForm;
+            console.log(this.user.hasMintedNft)
         },
         async getNFT() {
             await this.getTOPWEB3([this.$store.state.address, this.friends.length])
+            await this.setNftAction([this.$store.state.address, true])
             this.hasNFT = true
         },
         async getBalance() {
             this.hasNFT = await this.getBalanceNFT([this.$store.state.address])
             console.log(this.hasNFT)
         },
+        async getUserPosts(){
+            this.posts = await this.getUserPostsAction([this.$store.state.address])
+        },
         async refresh() {
-            await this.getBalance()
             await this.getUser()
-        }
+            await this.getBalance()
+            await this.getUserPosts()
+        },
+        goToEditPage() {
+            this.$router.push({ name: 'edit' });
+        },
+        async createPost(){
+            await this.createPostAction([this.postContent])
+            this.postContent = ""
+        },
     },
-    // async mounted() {
-    //     this.getBalance()
-    // },
+    async mounted() {
+        await this.refresh()
+    },
     // watch: {
     //     'this.hasNFT': 'getBalance'
     // }
@@ -146,153 +152,121 @@ export default {
 </script>
 <style scoped>
 body {
-    margin-top: 20px;
-    color: #1a202c;
-    text-align: left;
-    background-color: #e2e8f0;
+    margin: 0;
+    font-family: Arial, sans-serif;
+
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
 }
 
 .main-body {
-    padding: 15px;
-}
-
-.card {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .1), 0 1px 2px 0 rgba(0, 0, 0, .06);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    word-wrap: break-word;
-    background-color: #fff;
-    background-clip: border-box;
-    border: 0 solid rgba(0, 0, 0, .125);
-    border-radius: .25rem;
-}
-
-.card-body {
-    flex: 1 1 auto;
-    min-height: 1px;
-    padding: 1rem;
-}
-
-.gutters-sm {
-    margin-right: -8px;
-    margin-left: -8px;
-}
-
-.gutters-sm>.col,
-.gutters-sm>[class*="col-"] {
-    padding-right: 8px;
-    padding-left: 8px;
-}
-
-.mb-3,
-.my-3 {
-    margin-bottom: 1rem !important;
-}
-
-.bg-gray-300 {
-    background-color: #e2e8f0;
-}
-
-.h-100 {
-    height: 100% !important;
-}
-
-.shadow-none {
-    box-shadow: none !important;
-}
-
-/* Add some basic styling to the page */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* Style for buttons */
-.btn {
-    background-color: #ff5555;
-    /* Reddish color */
-    color: #fff;
-    border: none;
-    padding: 15px 30px;
-    /* Larger padding */
-    margin: 10px;
-    /* Larger margin */
-    cursor: pointer;
-    border-radius: 8px;
-    /* Rounded corners */
-}
-
-/* Style for input fields */
-input,
-textarea {
     width: 100%;
-    padding: 15px;
-    /* Larger padding */
-    margin: 10px 0;
-    /* Larger margin */
-    box-sizing: border-box;
-    border: 1px solid #ccc;
+    display: flex;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.col-lg-8, .col-lg-4 {
+    padding: 10px;
+}
+
+.user-profile {
+    background-color: #f8f9fa;
+    padding: 20px;
     border-radius: 8px;
-    /* Rounded corners */
-    font-size: 18px;
-    /* Larger font size */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Style for the image */
-img {
-    max-width: 150px;
-    height: auto;
-    border-radius: 8px;
-    /* Rounded corners */
-    margin-top: 15px;
-    /* Larger margin */
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* Style for the input field with the file icon */
-.input-field {
-    position: relative;
-    margin: 15px 0;
-    /* Larger margin */
-}
-
-.input-field i {
-    position: absolute;
-    top: 50%;
-    left: 15px;
-    /* Larger left position */
-    transform: translateY(-50%);
-    color: #ff5555;
-    /* Reddish color */
-}
-
-/* Style for the file input */
-.input-field input[type="file"] {
-    padding-left: 45px;
-    /* Larger padding */
-}
-
-/* Style for the container of the search input and button */
-.search-container {
+.profile-header {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
-    /* Larger margin */
 }
 
-/* Adjust the styles for the address input to fit in the same line */
-.address-input {
-    flex: 1;
-    margin-right: 15px;
-    /* Larger margin */
-}</style>
+.profile-image .avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 20px;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.nickname {
+    margin: 0;
+}
+
+.nft-label {
+    margin: 5px 0 0;
+}
+
+.nft-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid black;
+}
+
+.profile-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.user-bio, .profile-details, .create-post, .user-posts {
+    margin-top: 20px;
+}
+
+textarea.form-control {
+    width: 90%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+}
+
+button.btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn:hover {
+    background-color: #0056b3;
+}
+
+.user-friends {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.user-friends h1 {
+    margin-bottom: 20px;
+}
+
+.post-item {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+</style>

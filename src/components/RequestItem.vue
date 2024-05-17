@@ -1,17 +1,17 @@
 <template>
-    <div class="request-item-container">
+    <div class="request-item-container p-3 mb-3 shadow">
         <div class="profile-picture">
-            <img v-if="this.user.image" :src="this.user.image" alt="Pinata Image" />
+            <img v-if="user.image" :src="user.image" alt="User Image" class="img-fluid rounded-circle" />
             <div v-else>
                 <p>No profile picture yet</p>
             </div>
         </div>
-        <div class="user-details">
-            <h1>Address: {{ this.userAddress }}</h1>
-            <h1>Username: {{ this.user.name }}</h1>
-            <div class="buttons-container">
-                <button @click="accept" class="btn accept-btn">Accept Request</button>
-                <button @click="decline" class="btn decline-btn">Decline Request</button>
+        <div class="user-details ml-3">
+            <h1>Address: {{ userAddress }}</h1>
+            <h2>Username: {{ user.name }}</h2>
+            <div class="buttons-container mt-3">
+                <button @click="accept" class="btn btn-success">Accept Request</button>
+                <button @click="decline" class="btn btn-danger ml-2">Decline Request</button>
             </div>
         </div>
     </div>
@@ -43,10 +43,10 @@ export default {
             this.user = await this.getUserProfile([this.userAddress])
             console.log(this.user)
         },
-        async accept(){
+        async accept() {
             await this.acceptFriendRequest([this.userAddress])
         },
-        async decline(){
+        async decline() {
             await this.declineFriendRequest([this.userAddress])
         }
     },
@@ -59,49 +59,46 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .request-item-container {
     display: flex;
     align-items: center;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    margin: 10px;
     background-color: #fff;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
 }
 
 .profile-picture {
-    margin-right: 20px;
-}
-
-.profile-picture img {
-    max-width: 100px;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0;
     border-radius: 50%;
 }
 
-.user-details h1 {
-    margin: 10px 0;
+.profile-picture img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 50%;
+}
+
+.user-details h1,
+.user-details h2 {
+    color: #333;
 }
 
 .buttons-container {
     display: flex;
-    gap: 10px;
 }
 
-.accept-btn {
-    background-color: #4CAF50;
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
 }
 
-.decline-btn {
-    background-color: #F44336;
-}
-
-.btn {
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 5px;
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
 }
 </style>

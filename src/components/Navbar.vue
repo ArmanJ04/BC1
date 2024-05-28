@@ -67,7 +67,7 @@ body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    background-color: black;
+    background-color: rgb(21, 117, 64);
     padding: 10px 20px;
     box-sizing: border-box;
 }
@@ -80,7 +80,7 @@ body {
 button {
     background: none;
     border: none;
-    color: white;
+    color: rgb(255, 255, 255);
     font-size: 16px;
     cursor: pointer;
     padding: 10px;
@@ -96,11 +96,11 @@ input[type="text"] {
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    width: 300px; /* увеличиваем ширину поля ввода */
+    width: 300px; 
     transition: width 0.3s ease;
 }
 
 input[type="text"]:focus {
-    width: 350px; /* немного увеличиваем ширину при фокусе */
+    width: 350px; 
 }
 </style>

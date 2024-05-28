@@ -40,7 +40,6 @@ export default {
         'this.requests': 'getRequests'
     }
 };
-//алия лучшая
 </script>
 
 <style scoped>

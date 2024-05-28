@@ -54,25 +54,6 @@ export default {
             updateProfileAction: "updateProfile"
         }),
         async updateProfile() {
-            // try {
-            //     if (this.name !== this.user.name) {
-            //         await this.updateProfileName([this.name]);
-            //     }
-            //     if (this.bio !== this.user.bio) {
-            //         await this.updateProfileBio([this.bio]);
-            //     }
-            //     if (this.selectedFile) {
-            //         console.log(this.selectedFile)
-            //         const ipfsHash = await this.uploadFileToPinata([this.selectedFile])
-            //         await this.updateProfilePicture([ipfsHash])
-            //     }
-            //     alert("Профиль обновлен успешно!");
-            //     this.$router.push({ name: 'main' });
-            // } catch (error) {
-            //     console.error("Ошибка при обновлении профиля:", error);
-            //     alert("Произошла ошибка при обновлении профиля.");
-            //     this.$router.push({ name: 'main' });
-            // }
             try {
                 const name = this.name
                 const bio = this.bio 
@@ -112,17 +93,10 @@ export default {
             this.$router.push('/');
         },
     },
-    // async mounted() {
-    //     this.getBalance()
-    // },
-    // watch: {
-    //     'this.hasNFT': 'getBalance'
-    // }
     async mounted() {
         await this.getUser();
     },
 };
-//алия лучшая 
 </script>
 <style scoped>
 
@@ -167,14 +141,14 @@ export default {
 
 .form-container {
     position: relative;
-    width: 400px; /* Ширина формы */
-    margin: 0 auto; /* Центрирование формы */
-    text-align: center; /* Центрирование дочерних элементов */
+    width: 400px; 
+    margin: 0 auto;
+    text-align: center; 
 }
 
 .form-input {
-    width: calc(100% - 20px); /* Ширина поля с учетом отступов */
-    margin: 10px 0; /* Отступ между элементами формы */
+    width: calc(100% - 20px); 
+    margin: 10px 0;
     padding: 10px;
     font-size: 16px;
     border: 1px solid #ccc;
@@ -184,7 +158,7 @@ export default {
 
 .input-field {
     position: relative;
-    margin: 10px 0; /* Отступ между элементами формы */
+    margin: 10px 0; 
 }
 
 .input-field i {

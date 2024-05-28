@@ -6,7 +6,7 @@
                     <form @submit.prevent="submitForm" class="forms-container">
                         <h2 class="title">Sign up</h2>
                         <div class="mb-4">
-                            <!-- <label for="name" class="form-label">Name</label> -->
+                            <label for="name" class="form-label">Name</label>
                             <div class="input-group">
                                 <input v-model="name" type="text" class="form-control" id="name" placeholder="Name"
                                     name="first_name" required />
@@ -36,7 +36,7 @@ export default {
     name: 'RegFormView',
     data() {
         return {
-            // selectedFile: null, 
+            selectedFile: null, 
             name: ""
         };
     },

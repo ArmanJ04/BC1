@@ -31,7 +31,6 @@ export default createStore({
     },
     actions: {
         async connectWallet({ state }) {
-            // проверяем, что есть метамаск и подключаем его
             if (typeof window.ethereum !== 'undefined') {
                 console.log("Ethereum client installed!")
                 if (ethereum.isMetaMask === true) {
@@ -58,10 +57,7 @@ export default createStore({
                 state.isConnected = false;
                 state.buttonText = 'Connect MetaMask';
             });
-            // создаём провайдера
             provider = new ethers.providers.Web3Provider(ethereum)
-
-            // подключаем аккаунт
             await ethereum.request({ method: "eth_requestAccounts" })
                 .then(accounts => {
                     state.address = ethers.utils.getAddress(accounts[0])
@@ -69,7 +65,6 @@ export default createStore({
                     console.log(`Account ${state.address} connected`)
                     alert("Connected!")
                 })
-            // получаем параметры сети 
             state.chainId = await window.ethereum.request({ method: 'eth_chainId' });
             console.log("chainId: ", state.chainId)
             if (state.chainId == "0x1") {
@@ -103,9 +98,7 @@ export default createStore({
             })
 
             ethereum.on('chainChanged', async (chainId) => {
-                // создаём провайдера
                 provider = new ethers.providers.Web3Provider(ethereum)
-                // получаем параметры сети 
                 state.chainId = await window.ethereum.request({ method: 'eth_chainId' });
                 console.log(`chainId changed to ${state.chainId}`)
 
@@ -137,21 +130,6 @@ export default createStore({
                 }
             })
         },
-        // async changeNetwork({state}, chainId) {
-        //     console.log(chainId)
-        //     if (typeof window.ethereum !== 'undefined') {
-        //         try {
-        //             await window.ethereum.request({
-        //                 method: 'wallet_switchEthereumChain',
-        //                 params: [{ chainId: `0x${chainId[0].toString(16)}` }],
-        //             });
-        //         } catch (error) {
-        //             console.error('Error switching network:', error);
-        //         }
-        //     } else {
-        //         console.error('MetaMask not detected. Please install MetaMask extension.');
-        //     }
-        // },
         async uploadFileToPinata({ state }, args) {
             try {
                 const [file] = args;
@@ -173,7 +151,6 @@ export default createStore({
                 formData.append("pinataOptions", pinataOptions);
                 console.log('FormData after pinataOptions append:', formData);
 
-                // Logging FormData contents
                 formData.forEach((value, key) => {
                     console.log(`${key}: ${value}`);
                 });
@@ -296,7 +273,6 @@ export default createStore({
             console.log(userProfilePicture)
             let url = await dispatch("getImageFromPinata", userProfilePicture)
             
-            // url = "'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/1200px-Default_pfp.svg.png'"
             const user = {
                 address: address[0],
                 name: username,

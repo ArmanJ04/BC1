@@ -1,296 +1,175 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+#![allow(dead_code)]
 
-contract Web3Linkedin {
-    struct UserProfile {
-        name: String,
-        bio: String,
-        profile_picture_cid: String,
-        friends: Vec<Address>,
-        friend_requests: Vec<Address>,
-        incoming_friend_requests: Vec<Address>,
-        has_minted_nft: bool,
+use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use near_sdk::collections::{LookupMap, UnorderedMap};
+use near_sdk::env;
+use near_sdk::serde::{Deserialize, Serialize};
+
+#[derive(Default, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+pub struct Web3Linkedin {
+
+    owner: Address,
+    post_counter: u256,
+    users: UnorderedMap<Address, UserProfile>,
+    user_posts: UnorderedMap<Address, Vec<Post>>,
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+pub struct UserProfile {
+    name: String,
+    bio: String,
+    profile_picture_cid: String,
+    friends: Vec<Address>,
+    friend_requests: Vec<Address>,
+    incoming_friend_requests: Vec<Address>,
+    has_minted_nft: bool,
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+pub struct Post {
+    id: u256,
+    author: Address,
+    content: String,
+}
+
+impl Web3Linkedin {
+    pub fn new() -> Self {
+        Self {
+            owner: env::signer_account_id(),
+            post_counter: 0,
+            users: UnorderedMap::new(b"users".to_vec()),
+            user_posts: UnorderedMap::new(b"user_posts".to_vec()),
+        }
     }
 
-    struct Post {
-        id: u256,
-        author: Address,
-        content: String,
+    pub fn get_friend_requests(&self, user: Address) -> Vec<Address> {
+        self.users.get(&user).map(|profile| profile.friend_requests.clone()).unwrap_or_default()
     }
 
-    address public owner;
-    uint256 public post_counter;
-
-    mapping(address => UserProfile) public users;
-    mapping(address => Vec<Post>) public user_posts;
-
-    event FriendRequestSent(address indexed from, address indexed to);
-    event FriendRequestAccepted(address indexed from, address indexed to);
-    event FriendRequestDeclined(address indexed from, address indexed to);
-    event ProfileUpdated(address indexed user);
-    event OwnerChanged(address indexed previous_owner, address indexed new_owner);
-    event NftStatusUpdated(address indexed user, bool value);
-    event PostCreated(uint256 id, address indexed author, string content);
-
-    constructor() {
-        owner = msg.sender;
+    pub fn get_incoming_friend_requests(&self, user: Address) -> Vec<Address> {
+        self.users.get(&user).map(|profile| profile.incoming_friend_requests.clone()).unwrap_or_default()
     }
 
-    modifier not_already_friends(address _user) {
-        require(!is_friend(msg.sender, _user), "Users are already friends");
-        _;
+    pub fn get_user_profile(&self, user: Address) -> Option<UserProfile> {
+        self.users.get(&user)
     }
 
-    modifier not_duplicate_friend_request(address _to) {
-        require(!is_friend_request_sent(_to), "Friend request already sent");
-        _;
+    pub fn change_owner(&mut self, new_owner: Address) {
+        self.owner = new_owner;
     }
 
-    modifier only_owner() {
-        require(
-            msg.sender == owner,
-            "Only contract owner can call this function"
-        );
-        _;
+    pub fn set_nft(&mut self, user: Address, value: bool) {
+        if let Some(profile) = self.users.get_mut(&user) {
+            profile.has_minted_nft = true;
+        }
     }
 
-    modifier only_minted_nft_user() {
-        require(users[msg.sender].has_minted_nft, "User has not minted NFT");
-        _;
-    }
-
-    modifier only_registered_user() {
-        require(users[msg.sender].name != "", "User is not registered");
-        _;
-    }
-
-    function get_friend_requests(address _user)
-        external
-        view
-        returns (Vec<Address>)
-    {
-        return users[_user].friend_requests;
-    }
-
-    function get_incoming_friend_requests(address _user)
-        external
-        view
-        returns (Vec<Address>)
-    {
-        return users[_user].incoming_friend_requests;
-    }
-
-    function get_user_profile(address _user)
-        external
-        view
-        returns (
-            String memory name,
-            String memory bio,
-            String memory profile_picture,
-            Vec<Address> memory friends,
-            bool has_minted_nft
-        )
-    {
-        UserProfile memory user_profile = users[_user];
-        return (
-            user_profile.name,
-            user_profile.bio,
-            user_profile.profile_picture_cid,
-            user_profile.friends,
-            user_profile.has_minted_nft
-        );
-    }
-
-    function change_owner(address new_owner) external only_owner {
-        require(new_owner != address(0), "Invalid new owner address");
-        emit OwnerChanged(owner, new_owner);
-        owner = new_owner;
-    }
-
-    function set_nft(address _user, bool _value) external only_owner {
-        require(!users[_user].has_minted_nft, "NFT status can only be set once");
-        users[_user].has_minted_nft = _value;
-        emit NftStatusUpdated(_user, _value);
-    }
-
-    function create_post(string memory _content) external only_registered_user only_minted_nft_user {
-        post_counter++;
-        Post memory new_post = Post({
-            id: post_counter,
+    pub fn create_post(&mut self, content: String) {
+        self.post_counter += 1;
+        let new_post = Post {
+            id: self.post_counter,
             author: msg.sender,
-            content: _content
-        });
-        user_posts[msg.sender].push(new_post);
-        emit PostCreated(post_counter, msg.sender, _content);
+            content,
+        };
+        let user = self.users.entry(msg.sender).or_insert_with(Default::default);
+        let user_posts = self.user_posts.entry(msg.sender).or_insert_with(Vec::new);
+        user_posts.push(new_post.clone());
+    }
+    pub fn get_user_posts(&self, user: Address) -> Option<&Vec<Post>> {
+        self.user_posts.get(&user)
     }
 
-    function get_user_posts(address _user) external view returns (Vec<Post> memory) {
-        return user_posts[_user];
-    }
-
-    function register_profile(string memory _name) external {
-        require(
-            users[msg.sender].name == "",
-            "User already registered"
-        );
-        users[msg.sender] = UserProfile(
-            _name,
-            "",
-            "",
-            Vec<Address>(0),
-            Vec<Address>(0),
-            Vec<Address>(0),
-            false
-        );
-    }
-
-    function update_profile(
-        string memory _name,
-        string memory _bio,
-        string memory _profile_picture_cid
-    ) external {
-        UserProfile storage user = users[msg.sender];
-
-        if (
-            bytes(_name).length > 0 &&
-            keccak256(bytes(user.name)) != keccak256(bytes(_name))
-        ) {
-            user.name = _name;
+    pub fn register_profile(&mut self, user: Address, name: String) {
+        if !self.users.contains_key(&user) {
+            self.users.insert(&user, &UserProfile {
+                name,
+                bio: String::new(),
+                profile_picture_cid: String::new(),
+                friends: Vec::new(),
+                friend_requests: Vec::new(),
+                incoming_friend_requests: Vec::new(),
+                has_minted_nft: false,
+            });
         }
-
-        if (
-            bytes(_bio).length > 0 &&
-            keccak256(bytes(user.bio)) != keccak256(bytes(_bio))
-        ) {
-            user.bio = _bio;
-        }
-
-        if (
-            bytes(_profile_picture_cid).length > 0 &&
-            keccak256(bytes(user.profile_picture_cid)) !=
-            keccak256(bytes(_profile_picture_cid))
-        ) {
-            user.profile_picture_cid = _profile_picture
-            _cid;
-        }
-
-        emit ProfileUpdated(msg.sender);
     }
 
-    function send_friend_request(address _to)
-        external
-        not_already_friends(_to)
-        not_duplicate_friend_request(_to)
-    {
-        require(msg.sender != _to, "Cannot send friend request to yourself");
-        users[msg.sender].friend_requests.push(_to);
-        users[_to].incoming_friend_requests.push(msg.sender); 
-        emit FriendRequestSent(msg.sender, _to);
-    }
-
-    function accept_friend_request(address _from) external {
-        require(
-            is_friend_request_received(_from),
-            "No friend request from this user"
-        );
-        users[msg.sender].friends.push(_from);
-        users[_from].friends.push(msg.sender);
-        remove_friend_request(_from, msg.sender);
-        remove_incoming_friend_request(msg.sender, _from);
-        emit FriendRequestAccepted(_from, msg.sender);
-    }
-
-    function decline_friend_request(address _from) external {
-        require(
-            is_friend_request_received(_from),
-            "No friend request from this user"
-        );
-        remove_friend_request(_from, msg.sender);
-        remove_incoming_friend_request(msg.sender, _from);
-        emit FriendRequestDeclined(_from, msg.sender);
-    }
-
-    function remove_friend(address _friend) external {
-        require(is_friend(msg.sender, _friend), "User is not a friend");
-        remove_friend_from_list(msg.sender, _friend);
-        remove_friend_from_list(_friend, msg.sender);
-    }
-
-    function remove_friend_from_list(address _user, address _friend) internal {
-        for (uint256 i = 0; i < users[_user].friends.length; i++) {
-            if (users[_user].friends[i] == _friend) {
-                users[_user].friends[i] = users[_user].friends[
-                    users[_user].friends.length - 1
-                ];
-                users[_user].friends.pop();
-                break;
+    pub fn update_profile(&mut self, user: Address, name: String, bio: String, profile_picture_cid: String) {
+        if let Some(profile) = self.users.get_mut(&user) {
+            if !name.is_empty() && profile.name != name {
+                profile.name = name;
+            }
+            if !bio.is_empty() && profile.bio != bio {
+                profile.bio = bio;
+            }
+            if !profile_picture_cid.is_empty() && profile.profile_picture_cid != profile_picture_cid {
+                profile.profile_picture_cid = profile_picture_cid;
             }
         }
     }
 
-    function remove_friend_request(address _user, address _from) internal {
-        for (uint256 i = 0; i < users[_user].friend_requests.length; i++) {
-            if (users[_user].friend_requests[i] == _from) {
-                users[_user].friend_requests[i] = users[_user].friend_requests[
-                    users[_user].friend_requests.length - 1
-                ];
-                users[_user].friend_requests.pop();
-                break;
+    pub fn send_friend_request(&mut self, from: Address, to: Address) {
+        if from != to && !self.is_friend(&from, &to) && !self.is_friend_request_sent(&from, &to) {
+            self.users.get_mut(&from).map(|profile| profile.friend_requests.push(to));
+            self.users.get_mut(&to).map(|profile| profile.incoming_friend_requests.push(from));
+        }
+    }
+
+    pub fn accept_friend_request(&mut self, from: Address, to: Address) {
+        if self.is_friend_request_received(&from, &to) {
+            self.users.get_mut(&to).map(|profile| profile.friends.push(from));
+            self.users.get_mut(&from).map(|profile| profile.friends.push(to));
+            self.remove_friend_request(&from, &to);
+            self.remove_incoming_friend_request(&to, &from);
+        }
+    }
+
+    pub fn decline_friend_request(&mut self, from: Address, to: Address) {
+        if self.is_friend_request_received(&from, &to) {
+            self.remove_friend_request(&from, &to);
+            self.remove_incoming_friend_request(&to, &from);
+        }
+    }
+
+    pub fn remove_friend(&mut self, user: Address, friend: Address) {
+        if let Some(profile) = self.users.get_mut(&user) {
+            if let Some(index) = profile.friends.iter().position(|&f| f == friend) {
+                profile.friends.remove(index);
+            }
+        }
+        if let Some(profile) = self.users.get_mut(&friend) {
+            if let Some(index) = profile.friends.iter().position(|&f| f == user) {
+                profile.friends.remove(index);
             }
         }
     }
 
-    function remove_incoming_friend_request(address _user, address _from)
-        internal
-    {
-        for (
-            uint256 i = 0;
-            i < users[_user].incoming_friend_requests.length;
-            i++
-        ) {
-            if (users[_user].incoming_friend_requests[i] == _from) {
-                users[_user].incoming_friend_requests[i] = users[_user]
-                    .incoming_friend_requests[
-                        users[_user].incoming_friend_requests.length - 1
-                    ];
-                users[_user].incoming_friend_requests.pop();
-                break;
+    fn remove_friend_request(&mut self, user: Address, from: Address) {
+        if let Some(profile) = self.users.get_mut(&user) {
+            if let Some(index) = profile.friend_requests.iter().position(|&f| f == from) {
+                profile.friend_requests.remove(index);
             }
         }
     }
 
-    function is_friend_request_sent(address _to) internal view returns (bool) {
-        for (uint256 i = 0; i < users[msg.sender].friend_requests.length; i++) {
-            if (users[msg.sender].friend_requests[i] == _to) {
-                return true;
+    fn remove_incoming_friend_request(&mut self, user: Address, from: Address) {
+        if let Some(profile) = self.users.get_mut(&user) {
+            if let Some(index) = profile.incoming_friend_requests.iter().position(|&f| f == from) {
+                profile.incoming_friend_requests.remove(index);
             }
         }
-        return false;
     }
 
-    function is_friend_request_received(address _from)
-        internal
-        view
-        returns (bool)
-    {
-        for (uint256 i = 0; i < users[_from].friend_requests.length; i++) {
-            if (users[_from].friend_requests[i] == msg.sender) {
-                return true;
-            }
-        }
-        return false;
+    fn is_friend(&self, user1: &Address, user2: &Address) -> bool {
+        self.users.get(&user1).map_or(false, |profile| profile.friends.contains(user2))
+            && self.users.get(&user2).map_or(false, |profile| profile.friends.contains(user1))
     }
 
-    function is_friend(address _user1, address _user2)
-        internal
-        view
-        returns (bool)
-    {
-        for (uint256 i = 0; i < users[_user1].friends.length; i++) {
-            if (users[_user1].friends[i] == _user2) {
-                return true;
-            }
-        }
-        return false;
+    fn is_friend_request_sent(&self, from: &Address, to: &Address) -> bool {
+        self.users.get(&from).map_or(false, |profile| profile.friend_requests.contains(to))
+    }
+
+    fn is_friend_request_received(&self, from: &Address, to: &Address) -> bool {
+        self.users.get(&to).map_or(false, |profile| profile.friend_requests.contains(from))
     }
 }

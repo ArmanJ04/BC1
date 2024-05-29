@@ -2,22 +2,21 @@
     <div class="body">
         <div class="container">
             <nav class="navbar">
-                <div class="btn-container">
-                    <button @click="$router.push('/')">Мой профиль</button>
-                    <button @click="$router.push('/requests')">Входящие запросы</button>
+                <div class="nav-left">
+                    <button @click="$router.push('/')">My profile</button>
+                    <button @click="$router.push('/requests')">Income requests</button>
                 </div>
-                <div class="nav-buttons">
-                    <input v-model="searchAddress" type="text" placeholder="Введите адрес" name="searchAddress" />
-                    <button @click="searchUser">Поиск</button>
+                <div class="nav-center">
+                    <input v-model="searchAddress" type="text" placeholder="Input address" name="searchAddress" />
+                    <button @click="searchUser">Search</button>
                 </div>
-                <div class="btn-container">
-                    <button @click="connectWallet">Подключить кошелек</button>
+                <div class="nav-right">
+                    <button @click="connectWallet">Connect wallet</button>
                 </div>
             </nav>
         </div>
     </div>
 </template>
-
 
 <script>
 import { mapActions } from 'vuex'
@@ -25,9 +24,6 @@ export default {
     name: 'navbar',
     data() {
         return {
-            name: "",
-            bio: "",
-            selectedFile: null,
             searchAddress: "",
             user: {}
         };
@@ -36,11 +32,7 @@ export default {
         ...mapActions({
             connectWallet: "connectWallet",
             getUserProfile: "getUserProfile",
-            // changeNetwork : "changeNetwork"
         }),
-        handleFileChange(event) {
-            this.selectedFile = event.target.files[0];
-        },
         async getUser() {
             console.log(this.$store.state.address)
             this.user = await this.getUserProfile([this.$store.state.address])
@@ -49,9 +41,6 @@ export default {
             this.$router.push(`/user/${this.searchAddress}`)
             this.searchAddress = ""
         },
-        // async change(){
-        //     await this.changeNetwork([1])
-        // }
     },
 };
 </script>
@@ -59,7 +48,8 @@ export default {
 <style scoped>
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f9;
 }
 
 .navbar {
@@ -67,40 +57,51 @@ body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    background-color: rgb(21, 117, 64);
-    padding: 10px 20px;
+    background-color: #00695c;
+    padding: 15px 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
     box-sizing: border-box;
 }
 
-.btn-container, .nav-buttons {
+.nav-left, .nav-right, .nav-center {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-center {
+    flex-grow: 1;
+    justify-content: center;
 }
 
 button {
-    background: none;
-    border: none;
-    color: rgb(255, 255, 255);
+    background-color: #004d40;
+    border: 2px solid #004d40;
+    color: #ffffff;
     font-size: 16px;
     cursor: pointer;
-    padding: 10px;
-    transition: color 0.3s ease;
+    padding: 10px 20px;
+    border-radius: 4px;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
 button:hover {
-    color: rgba(255, 255, 255, 0.8);
+    background-color: #00796b;
+    border-color: #00796b;
 }
 
 input[type="text"] {
     padding: 10px;
     font-size: 16px;
-    border: 1px solid #ccc;
+    border: 2px solid #004d40;
     border-radius: 4px;
-    width: 300px; 
-    transition: width 0.3s ease;
+    width: 300px;
+    transition: width 0.3s, border-color 0.3s;
 }
 
 input[type="text"]:focus {
-    width: 350px; 
+    width: 350px;
+    border-color: #00796b;
 }
 </style>

@@ -10,8 +10,8 @@
             <h1>Address: {{ userAddress }}</h1>
             <h2>Username: {{ user.name }}</h2>
             <div class="buttons-container mt-3">
-                <button @click="accept" class="btn btn-success">Accept Request</button>
-                <button @click="decline" class="btn btn-danger ml-2">Decline Request</button>
+                <button @click="accept" class="btn btn-green">Accept Request</button>
+                <button @click="decline" class="btn btn-red ml-2">Decline Request</button>
             </div>
         </div>
     </div>
@@ -63,8 +63,10 @@ export default {
 .request-item-container {
     display: flex;
     align-items: center;
-    background-color: #fff;
+    background-color: #e0f7fa;
     border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .profile-picture {
@@ -73,7 +75,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f0f0f0;
+    background-color: #b2dfdb;
     border-radius: 50%;
 }
 
@@ -83,22 +85,47 @@ export default {
     border-radius: 50%;
 }
 
+.user-details {
+    margin-left: 20px;
+}
+
 .user-details h1,
 .user-details h2 {
-    color: #333;
+    color: #00796b;
 }
 
 .buttons-container {
     display: flex;
+    gap: 10px;
 }
 
-.btn-success {
-    background-color: #28a745;
-    border-color: #28a745;
+.btn-green {
+    background-color: #4caf50;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
 }
 
-.btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
+.btn-green:hover {
+    background-color: #388e3c;
+}
+
+.btn-red {
+    background-color: #f44336;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-red:hover {
+    background-color: #d32f2f;
 }
 </style>

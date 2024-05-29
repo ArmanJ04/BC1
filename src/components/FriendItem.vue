@@ -1,14 +1,17 @@
 <template>
     <div class="friend-card p-3 mb-3 shadow">
-        <div class="d-flex align-items-center">
-            <img @click="searchUser" :src="user.image" alt="No Image" class="friend-avatar img-fluid rounded-circle mr-3" width="100" />
-            <div @click="searchUser" class="friend-details">
-                <h3 class="friend-name">Никнейм: {{ user.name }}</h3>
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center" @click="searchUser">
+                <img :src="user.image" alt="No Image" class="friend-avatar img-fluid rounded-circle mr-3" width="100" />
+                <div class="friend-details">
+                    <h3 class="friend-name">Nickname: {{ user.name }}</h3>
+                </div>
             </div>
+            <button @click="remove" class="btn btn-danger">Remove </button>
         </div>
-        <button @click="remove" class="btn btn-danger ml-auto">Удалить из друзей</button>
     </div>
 </template>
+
 <script>
 import { mapActions } from 'vuex'
 export default {
@@ -55,7 +58,7 @@ export default {
 
 <style scoped>
 .friend-card {
-    background-color: #fff;
+    background-color: #e0f7fa;
     border-radius: 8px;
     padding: 20px;
 }
@@ -70,25 +73,26 @@ export default {
 
 .friend-name {
     margin-bottom: 5px;
+    color: #00796b;
 }
 
 .btn-danger {
     color: #fff;
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background-color: #0288d1;
+    border-color: #0288d1;
 }
 
 .btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
+    background-color: #0277bd;
+    border-color: #0277bd;
 }
 
 .btn-danger:focus {
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(2, 136, 209, 0.5);
 }
 
 .btn-danger:active {
-    background-color: #bd2130;
-    border-color: #b21f2d;
+    background-color: #0277bd;
+    border-color: #01579b;
 }
 </style>

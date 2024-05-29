@@ -1,24 +1,50 @@
 // SPDX-License-Identifier: MIT
-use near_sdk::{env, near_bindgen};
-use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LookupMap, UnorderedMap};
+#![allow(dead_code)]
 
-#[near_bindgen]
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+pub trait IERC165 {
+    fn supports_interface(&self, interface_id: [u8; 4]) -> bool;
+}
+
+pub trait IERC721Receiver {
+    fn on_erc721_received(&self, operator: &Address, from: &Address, token_id: u256, data: &[u8]) -> [u8; 4];
+}
+
+pub trait IERC721 {
+    fn balance_of(&self, owner: &Address) -> u256;
+    fn owner_of(&self, token_id: u256) -> Address;
+}
+
+pub trait IERC721Metadata {
+    fn name(&self) -> String;
+    fn symbol(&self) -> String;
+    fn token_uri(&self, token_id: u256) -> String;
+}
+
+pub struct ERC165 {}
+
+impl IERC165 for ERC165 {
+    fn supports_interface(&self, interface_id: [u8; 4]) -> bool {
+        interface_id == IERC165::interface_id()
+    }
+}
+
+impl ERC165 {
+    pub fn interface_id() -> [u8; 4] {
+        [0, 0, 0, 0]
+    }
+}
+
 pub struct MERC721 {
-    token_id: u64,
+    token_id: u256,
     name: String,
     symbol: String,
     base_uri: String,
-    owner: String,
-    required_friends: u64,
-    owners: UnorderedMap<u64, String>,
-    balances: LookupMap<String, u64>,
+    owner: Address,
+    balances: LookupMap<Address, u256>,
+    owners: UnorderedMap<u256, Address>,
 }
 
-#[near_bindgen]
 impl MERC721 {
-    #[init]
     pub fn new(base_uri: String) -> Self {
         Self {
             token_id: 0,
@@ -26,15 +52,14 @@ impl MERC721 {
             symbol: "TB3".to_string(),
             base_uri,
             owner: env::signer_account_id(),
-            required_friends: 2,
-            owners: UnorderedMap::new(b"owners".to_vec()),
             balances: LookupMap::new(b"balances".to_vec()),
+            owners: UnorderedMap::new(b"owners".to_vec()),
         }
     }
 
-    pub fn mint(&mut self, to: String, provided_friends: u64) -> u64 {
+    pub fn mint(&mut self, to: Address, provided_friends: u64) -> u256 {
         assert_eq!(env::signer_account_id(), self.owner, "ERC721: You are not the owner");
-        assert!(provided_friends >= self.required_friends, "ERC721: User does not have the required number of friends");
+        assert!(provided_friends >= REQUIRED_FRIENDS, "ERC721: User does not have the required number of friends");
 
         self.token_id += 1;
         self.owners.insert(&self.token_id, &to);
@@ -51,16 +76,16 @@ impl MERC721 {
         self.symbol.clone()
     }
 
-    pub fn get_token_uri(&self, token_id: u64) -> String {
+    pub fn token_uri(&self, token_id: u256) -> String {
         assert!(self.owners.contains_key(&token_id), "ERC721: URI query for nonexistent token");
         format!("{}{}", self.base_uri, token_id)
     }
 
-    pub fn balance_of(&self, owner: String) -> u64 {
+    pub fn balance_of(&self, owner: Address) -> u256 {
         self.balances.get(&owner).unwrap_or(0)
     }
 
-    pub fn owner_of(&self, token_id: u64) -> String {
-        self.owners.get(&token_id).unwrap_or("".to_string())
+    pub fn owner_of(&self, token_id: u256) -> Address {
+        self.owners.get(&token_id).unwrap_or_default()
     }
 }
